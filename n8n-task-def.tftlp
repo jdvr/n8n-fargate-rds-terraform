@@ -1,0 +1,34 @@
+${jsonencode([
+  {
+    "name": "n8n",
+    "image": "${docker_repository}:${docker_tag}",
+    "essential": true,
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-region": "${aws_region}",
+        "awslogs-stream-prefix": "n8n-main-service",
+        "awslogs-group": "${cw_logs_group}"
+      }
+    },
+    "portMappings": [
+      {
+        "containerPort": port,
+        "hostPort": port,
+        "protocol": "tcp"
+      }
+    ],
+    "cpu": 1,
+    "environment": [],
+    "ulimits": [
+      {
+        "name": "nofile",
+        "softLimit": 65536,
+        "hardLimit": 65536
+      }
+    ],
+    "mountPoints": [],
+    "memory": 2048,
+    "volumesFrom": []
+  }
+])}
