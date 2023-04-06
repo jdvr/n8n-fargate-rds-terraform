@@ -90,8 +90,9 @@ resource "aws_lb_target_group" "n8n_ecs_alb_tg" {
     protocol            = "HTTP"
     matcher             = "200-299"
     timeout             = "20"
-    path                = "/healtz"
+    path                = "/healthz"
     unhealthy_threshold = "2"
+    port                = var.app_port
   }
 
   tags = var.tags
@@ -101,6 +102,9 @@ resource "aws_lb_listener" "n8n_https_forward" {
   load_balancer_arn = aws_lb.n8n_ecs_alb.arn
   port              = 80
   protocol          = "HTTP"
+
+  // I don't have a custom domain, so I will use http
+  // certificate_arn = ""
 
   default_action {
     type             = "forward"
