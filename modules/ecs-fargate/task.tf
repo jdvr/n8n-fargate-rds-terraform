@@ -1,27 +1,21 @@
 resource "aws_cloudwatch_log_group" "n8n_main" {
-  name = "awslogs-n8n-main"
+  name = var.cw_logs_group
   tags = var.tags
 }
 
 resource "aws_ecs_task_definition" "n8n_main_task_definition" {
-  family                   = "n8n_task_family"
+  family                   = "${var.prefix}_n8n_task_family"
   network_mode             = "awsvpc"
   execution_role_arn       = aws_iam_role.n8n_task_execution_role.arn
   cpu                      = 256
   memory                   = 2048
   requires_compatibilities = ["FARGATE"]
-  container_definitions = templatefile("./n8n-task-def.tftlp", {
-    docker_repository = "docker.n8n.io/n8nio/n8n"
-    docker_tag        = "latest"
-    port              = var.app_port
-    aws_region        = var.aws_region
-    cw_logs_group     = aws_cloudwatch_log_group.n8n_main.name
-  })
-  tags = var.tags
+  container_definitions    = var.container_definitions
+  tags                     = var.tags
 }
 
 resource "aws_ecs_service" "n8n_main_service" {
-  name            = "n8n_main_service"
+  name            = "${var.prefix}_n8n_main_service"
   cluster         = aws_ecs_cluster.n8n_cluster.id
   task_definition = aws_ecs_task_definition.n8n_main_task_definition.arn
   desired_count   = 1

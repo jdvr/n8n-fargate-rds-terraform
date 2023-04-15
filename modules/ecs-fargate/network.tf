@@ -19,12 +19,12 @@ locals {
 }
 
 resource "aws_ecs_cluster" "n8n_cluster" {
-  name = "n8n-services-cluster"
+  name = "${var.prefix}_n8n-services-cluster"
   tags = var.tags
 }
 
 resource "aws_security_group" "n8n_lb" {
-  name        = "n8n-lb-sg"
+  name        = "${var.prefix}_n8n-lb-sg"
   description = "ALB for n8n SG"
 
   ingress {
@@ -45,14 +45,14 @@ resource "aws_security_group" "n8n_lb" {
 }
 
 resource "aws_security_group" "n8n_ecs_tasks_sg" {
-  name        = "n8n-ecs-tasks-sg"
+  name        = "${var.prefix}_n8n-ecs-tasks-sg"
   description = "allow inbound access from the ALB only"
 
   ingress {
     protocol = "tcp"
     # n8n default port
-    from_port       = 5678
-    to_port         = 5678
+    from_port       = var.app_port
+    to_port         = var.app_port
     cidr_blocks     = ["0.0.0.0/0"]
     security_groups = [aws_security_group.n8n_lb.id]
   }
@@ -70,7 +70,7 @@ resource "aws_security_group" "n8n_ecs_tasks_sg" {
 }
 
 resource "aws_lb" "n8n_ecs_alb" {
-  name               = "n8necsalb"
+  name               = "${var.prefix}n8necsalb"
   subnets            = local.subnets_ids
   load_balancer_type = "application"
   security_groups    = [aws_security_group.n8n_lb.id]

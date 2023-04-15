@@ -19,9 +19,3 @@ variable "tags" {
     TerraformManaged = true
   }
 }
-
-variable "app_port" {
-  type = number
-  description = "n8n application port"
-  default = 5678
-}
