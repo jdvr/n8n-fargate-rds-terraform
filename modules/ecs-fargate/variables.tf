@@ -33,3 +33,13 @@ variable "container_definitions" {
   type = string
   description = "Container definition for aws_ecs_task_definition"
 }
+
+variable "aws_vpc_id" {
+  type = string
+  description = "VPC id"
+}
+
+variable "subnets_ids" {
+  type = list
+  description = "Available Subnets (ids) for the VPC"
+}

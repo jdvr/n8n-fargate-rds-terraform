@@ -23,7 +23,7 @@ resource "aws_ecs_service" "n8n_main_service" {
 
   network_configuration {
     security_groups  = [aws_security_group.n8n_ecs_tasks_sg.id]
-    subnets          = local.subnets_ids
+    subnets          = var.subnets_ids
     assign_public_ip = true
   }
 

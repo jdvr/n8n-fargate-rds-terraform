@@ -1,23 +1,3 @@
-data "aws_vpc" "default" {
-  default = true
-}
-
-data "aws_subnets" "default_vpc_subnets" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.default.id]
-  }
-}
-
-data "aws_subnet" "default_vpc_subnets_ids" {
-  for_each = toset(data.aws_subnets.default_vpc_subnets.ids)
-  id       = each.value
-}
-
-locals {
-  subnets_ids = [for s in data.aws_subnet.default_vpc_subnets_ids : s.id]
-}
-
 resource "aws_ecs_cluster" "n8n_cluster" {
   name = "${var.prefix}_n8n-services-cluster"
   tags = var.tags
@@ -41,7 +21,7 @@ resource "aws_security_group" "n8n_lb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   tags   = var.tags
-  vpc_id = data.aws_vpc.default.id
+  vpc_id = var.aws_vpc_id
 }
 
 resource "aws_security_group" "n8n_ecs_tasks_sg" {
@@ -64,14 +44,14 @@ resource "aws_security_group" "n8n_ecs_tasks_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  vpc_id = data.aws_vpc.default.id
+  vpc_id = var.aws_vpc_id
 
   tags = var.tags
 }
 
 resource "aws_lb" "n8n_ecs_alb" {
   name               = "${var.prefix}n8necsalb"
-  subnets            = local.subnets_ids
+  subnets            = var.subnets_ids
   load_balancer_type = "application"
   security_groups    = [aws_security_group.n8n_lb.id]
   tags               = var.tags
@@ -81,7 +61,7 @@ resource "aws_lb_target_group" "n8n_ecs_alb_tg" {
   name        = "n8necsalbtg"
   port        = 80
   protocol    = "HTTP"
-  vpc_id      = data.aws_vpc.default.id
+  vpc_id      = var.aws_vpc_id
   target_type = "ip"
 
   health_check {
