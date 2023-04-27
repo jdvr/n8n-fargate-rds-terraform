@@ -19,7 +19,16 @@ ${jsonencode([
       }
     ],
     "cpu": 1,
-    "environment": [],
+    "environment": [
+      {"name": "DB_TYPE", "value" : "postgresdb"},
+      {"name": "DB_POSTGRESDB_DATABASE", "value" : "${db_name}"},
+      {"name": "DB_POSTGRESDB_HOST", "value" : "${db_host}"},
+      {"name": "DB_POSTGRESDB_PORT", "value" : "5432"},
+      {"name": "DB_POSTGRESDB_USER", "value" : "${db_user}"},
+      {"name": "DB_POSTGRESDB_PASSWORD", "value" : "${db_password}"},
+      {"name": "DB_POSTGRESDB_SSL_REJECT_UNAUTHORIZED", "value" : "false"},
+      {"name": "N8N_LOG_LEVEL", "value" : "debug"}
+    ],
     "ulimits": [
       {
         "name": "nofile",

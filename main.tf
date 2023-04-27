@@ -5,7 +5,7 @@ terraform {
       version = "4.61.0"
     }
     random = {
-      source = "hashicorp/random"
+      source  = "hashicorp/random"
       version = "3.5.1"
     }
   }
@@ -20,6 +20,10 @@ locals {
     Application      = "n8n"
     TerraformManaged = true
     Deployment       = local.prefix
+  }
+  db = {
+    name = "n8n"
+    username = "n8n"
   }
 }
 
@@ -43,8 +47,8 @@ module "security_group" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "~> 4.0"
 
-  name        = "${local.prefix}_n8n_postgres_sg"
-  vpc_id      = module.aws_network_data.vpc_id
+  name   = "${local.prefix}_n8n_postgres_sg"
+  vpc_id = module.aws_network_data.vpc_id
 
   # ingress
   ingress_with_cidr_blocks = [
@@ -60,32 +64,21 @@ module "security_group" {
   tags = local.tags
 }
 
-module "db" {
-  source  = "terraform-aws-modules/rds/aws"
-
-  identifier = "${local.prefix}n8npostgres"
-
+resource "aws_db_instance" "n8n_pg" {
+  allocated_storage    = 10
+  db_name              = local.db.name
   engine               = "postgres"
   engine_version       = "14"
-  family               = "postgres14" # DB parameter group
-  major_engine_version = "14"         # DB option group
   instance_class       = "db.t4g.small"
-
-  allocated_storage     = 20
-  max_allocated_storage = 20
-
-  db_name  = "n8n"
-  username = "n8n"
-  password = random_password.db_password.result
-  port     = 5432
-
-  tags = local.tags
+  username             = local.db.username
+  password             = random_password.db_password.result
+  skip_final_snapshot  = true
 }
 
 module "app-deployment" {
   source = "./modules/ecs-fargate"
 
-  prefix = local.prefix
+  prefix        = local.prefix
   cw_logs_group = local.cw_logs_group
   container_definitions = templatefile("./n8n-task-def.tftlp", {
     docker_repository = "docker.n8n.io/n8nio/n8n"
@@ -93,8 +86,13 @@ module "app-deployment" {
     port              = 5678
     aws_region        = var.aws_region
     cw_logs_group     = local.cw_logs_group
+    db_name           = aws_db_instance.n8n_pg.db_name 
+    db_host           = aws_db_instance.n8n_pg.address
+    db_password       = aws_db_instance.n8n_pg.password
+    db_user           = local.db.username
+
   })
-  aws_vpc_id = module.aws_network_data.vpc_id
+  aws_vpc_id  = module.aws_network_data.vpc_id
   subnets_ids = module.aws_network_data.subnets_ids
 
   tags = local.tags
